@@ -31,7 +31,6 @@
 </script>
 @endpush
 
-@section('content')
 <div class="top_panel_title top_panel_style_3 title_present breadcrumbs_present scheme_original">
     <div class="top_panel_title_inner top_panel_inner_style_3 title_present_inner breadcrumbs_present_inner breadcrumbs_7">
         <div class="content_wrap">
@@ -73,11 +72,16 @@
                                         </ul>
                                         <div id="sc_tab_131-2" class="sc_tabs_content">
                                             <div id="sc_menuitems_347_wrap" class="sc_menuitems_wrap">
+                                                {{-- >>> START MODIFIKASI: Form Checkout Guest --}}
                                                 <form action="{{ route('order.store') }}" method="POST">
                                                     @csrf
-                                                    <label for="username">Username:</label>
-                                                    <input type="text" name="username" required>
-
+                                                    <div style="margin-bottom: 20px;">
+                                                        <label for="username">Nama Pelanggan / Username:</label>
+                                                        {{-- Ambil username jika login, jika tidak, biarkan kosong --}}
+                                                        <input type="text" name="username" value="{{ auth()->user()->username ?? '' }}" required>
+                                                        <small class="text-muted">Nama ini akan digunakan untuk penamaan order Anda.</small>
+                                                    </div>
+                                                
                                                     <div id="sc_menuitems_347" class="sc_menuitems sc_menuitems_style_menuitems-1 sc_slider_nopagination sc_slider_nocontrols margin_top_medium" data-interval="7492" data-slides-per-view="2">
                                                         <div class="sc_columns columns_wrap">
                                                             @foreach ($cart as $item)
@@ -95,9 +99,7 @@
                                                                     <div class="sc_menuitem_description">
                                                                         Total Price: Rp. {{ number_format($item['price'] * $item['quantity'], 0, ',', '.') }}
                                                                         <div>
-                                                                            <!-- Hidden Input for Product ID -->
                                                                             <input type="hidden" name="products[{{ $item['id'] }}][id]" value="{{ $item['id'] }}">
-                                                                            <!-- Input for Quantity -->
                                                                             <input type="hidden" name="products[{{ $item['id'] }}][quantity]" value="{{ $item['quantity'] }}" min="1" required>
                                                                         </div>
                                                                         <button type="button" onclick="removeItem({{ $item['id'] }})">Remove</button>
@@ -107,15 +109,16 @@
                                                             @endforeach
                                                         </div>
                                                     </div>
-                                                    <!-- Total Section -->
                                                     <div style="margin-top: 20px;">
                                                         <strong>Total Order Price:</strong>
                                                         Rp. {{ number_format(collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']), 0, ',', '.') }}
                                                     </div>
 
-                                                    <!-- Submit Order -->
-                                                    <button type="submit" onclick="event.preventDefault(); this.closest('form').submit();">Order</button>
+                                                    <button type="submit" class="sc_button sc_button_square sc_button_style_filled sc_button_size_medium margin_top_medium">
+                                                        Pesan & Lanjutkan Pembayaran
+                                                    </button>
                                                 </form>
+                                                {{-- <<< END MODIFIKASI --}}
                                             </div>
                                         </div>
                                     </div>

@@ -12,6 +12,8 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        //
+        // >>> START MODIFIKASI
+        '/payment/notification', // Exclude Midtrans Webhook from CSRF protection
+        // <<< END MODIFIKASI
     ];
 }
