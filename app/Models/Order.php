@@ -11,20 +11,19 @@ class Order extends Model
 {
     use HasFactory;
 
-    // >>> START MODIFIKASI
+
     protected $fillable = ['total_price', 'username', 'order_code', 'status', 'payment_method', 'midtrans_transaction_id', 'snap_token'];
-    // <<< END MODIFIKASI
+    
 
     public function OrderDetails()
     {
         return $this->hasMany(OrderDetails::class);
     }
     
-    // Tambahkan relasi ke User (asumsi order dibuat oleh User yang login)
-    public function user()
+        public function user()
     {
         return $this->belongsTo(User::class, 'username', 'username'); // Asumsikan Anda memiliki kolom username di tabel users
-        // CATATAN: Jika Anda menggunakan ID user, ganti kolomnya
+        
     }
 
     public function product()

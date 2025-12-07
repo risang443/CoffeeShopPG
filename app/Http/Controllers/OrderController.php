@@ -12,7 +12,7 @@ use Midtrans\Config as MidtransConfig;
 use Midtrans\Snap;
 use Midtrans\Notification;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log; // Import untuk logging
+use Illuminate\Support\Facades\Log; 
 
 class OrderController extends Controller
 {
@@ -88,7 +88,7 @@ class OrderController extends Controller
     */
     public function show($id)
     {
-        // Pastikan order di-load ulang (sudah benar)
+        
         $order = Order::with('OrderDetails.product')->findOrFail($id);
         $orderLogs = OrderLog::where('order_id', $order->id)->orderBy('created_at', 'asc')->get();
 
@@ -96,7 +96,7 @@ class OrderController extends Controller
     }
 
     /*
-    // initiatePayment method yang sudah ada (tidak perlu diubah)
+    // initiatePayment 
     */
     public function initiatePayment(Request $request, Order $order)
     {
@@ -145,22 +145,19 @@ class OrderController extends Controller
     }
 
 
-    /**
-     * [PERBAIKAN] Endpoint untuk menerima notifikasi (Webhook) dari Midtrans.
-     * Menggunakan DB::transaction untuk atomicity dan error handling yang lebih baik.
-     */
+   
     public function notificationHandler(Request $request)
     {
-        // 1. Amankan proses dengan DB Transaction
+        
         try {
             DB::transaction(function () use ($request) {
                 
-                // Konfigurasi Midtrans
+                
                 MidtransConfig::$serverKey = config('services.midtrans.server_key');
                 MidtransConfig::$isProduction = config('services.midtrans.is_production');
                 MidtransConfig::$isSanitized = true;
                 
-                // Buat objek notifikasi (termasuk verifikasi signature)
+                
                 $notification = new Notification();
 
                 $transactionStatus = $notification->transaction_status;
@@ -168,54 +165,52 @@ class OrderController extends Controller
                 $transactionId = $notification->transaction_id;
                 $fraudStatus = $notification->fraud_status;
 
-                // Ekstraksi Order ID
+                
                 $orderId = explode('-', $orderIdWithTimestamp)[0]; 
                 $order = Order::find($orderId);
 
                 if (!$order) {
-                    // Jika order tidak ditemukan, throw error agar Midtrans retry
+                    
                     throw new \Exception("Order ID {$orderId} not found in database.");
                 }
 
                 $newStatus = $order->status;
                 
-                // Logika utama update status
+                
                 if ($transactionStatus == 'capture' || $transactionStatus == 'settlement') {
-                    // Pembayaran sukses/lunas
+                    
                     if ($fraudStatus == 'accept') {
                         $newStatus = 'paid'; 
                     }
                 } else if ($transactionStatus == 'pending') {
-                    // Masih menunggu pembayaran (e.g., VA belum dibayar)
-                    $newStatus = 'unpaid'; // Biarkan status unpaid (atau bisa pakai 'pending' jika ada)
+                    
+                    $newStatus = 'unpaid'; 
                 } else if ($transactionStatus == 'deny' || $transactionStatus == 'cancel' || $transactionStatus == 'expire') {
-                    // Pembayaran gagal/dibatalkan/kadaluarsa
+                    
                     $newStatus = 'cancelled';
                 }
                 
-                // Hanya update jika status berubah dan status saat ini belum PAID atau PROCEED
+                
                 if ($newStatus !== $order->status && $order->status === 'unpaid') {
                     $order->midtrans_transaction_id = $transactionId;
                     $order->status = $newStatus;
                     $order->save();
                     
-                    // PENTING: Jika Anda menggunakan OrderObserver, log status baru akan otomatis dibuat.
-                    // Jika tidak, tambahkan OrderLog::create() secara manual di sini.
+                    
                 }
 
             });
             
-            // Jika transaksi sukses, kirim OK 200 ke Midtrans
+            
             return response('OK', 200);
 
         } catch (\Exception $e) {
-            // Jika ada error (misal DB error, order tidak ditemukan), log errornya
+            
             Log::error("Midtrans Webhook Failed: {$e->getMessage()}", ['request' => $request->all()]);
             
-            // Kirim status 500 agar Midtrans mencoba ulang notifikasi
+            
             return response('Internal Server Error', 500); 
         }
     }
     
-    // ... (update, destroy methods yang sudah ada) ...
 }
