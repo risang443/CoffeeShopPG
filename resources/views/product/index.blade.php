@@ -38,7 +38,7 @@
                                 </h3>
                                 <span class="price">
                                     <span class="woocommerce-Price-amount amount">
-                                        <span class="woocommerce-Price-currencySymbol">&#36;</span>{{$p->price}}
+                                        <span class="woocommerce-Price-currencySymbol">Rp. </span>{{$p->price}}
                                     </span>
                                 </span>
                                 <a href="#"></a>
