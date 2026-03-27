@@ -1,4 +1,4 @@
-.<?php
+<?php
 
 use App\Models\Product;
 use App\Models\OrderDetails;
@@ -15,11 +15,6 @@ use App\Http\Controllers\ProductController;
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
 */
 
 Route::get('/', function () {
@@ -34,7 +29,23 @@ Route::get('/', function () {
 });
 
 Route::resource('product', ProductController::class);
-Route::resource('order', OrderController::class);
+
+// >>> START MODIFIKASI: Pisahkan store/show dari resource dan tambahkan route Midtrans
+
+// Order Resource (kecuali store, karena akan dibuat rute custom di bawah)
+Route::resource('order', OrderController::class)->except(['store', 'create']);
+
+// Rute untuk membuat Order dari keranjang (Checkout - TANPA MIDDLEWARE AUTH)
+Route::post('/order', [OrderController::class, 'store'])->name('order.store');
+
+// Rute untuk menginisiasi pembayaran Midtrans (TANPA MIDDLEWARE AUTH)
+Route::match(['get', 'post'], '/order/{order}/pay', [OrderController::class, 'initiatePayment'])->name('order.pay');
+
+// Rute untuk notifikasi/webhook dari Midtrans (TANPA MIDDLEWARE AUTH)
+Route::post('/payment/notification', [OrderController::class, 'notificationHandler']); 
+
+// <<< END MODIFIKASI
+
 Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('cart.add');
 Route::get('/cart', [CartController::class, 'viewCart'])->name('cart.view');
 Route::post('/cart/remove', [CartController::class, 'removeFromCart'])->name('cart.remove');
@@ -49,5 +60,3 @@ Route::post('reviews/{product}', [ReviewController::class, 'store'])->name('revi
 Route::group(['middleware' => ['auth', 'role:admin']], function () {
     Route::get('/admin', [AdminController::class, 'index'])->name('admin.dashboard');
 });
-
-

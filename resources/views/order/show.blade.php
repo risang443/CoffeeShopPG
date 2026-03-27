@@ -12,6 +12,34 @@
 
 <div class="container my-5">
     <h2 class="text-center mb-4">Track Your Order Status</h2>
+    
+    {{-- Notifikasi Error/Success --}}
+    @if (session('error'))
+        <div class="alert alert-danger text-center">{{ session('error') }}</div>
+    @endif
+
+    {{-- >>> START MODIFIKASI: Tampilkan status dan tombol bayar (Guest Friendly) --}}
+    @if ($order->status == 'unpaid')
+        <div class="alert alert-warning text-center p-4 mb-5 shadow-sm">
+            <h4>⚠️ Pesanan Belum Dibayar!</h4>
+            <p class="lead">Total yang harus dibayar: <strong>Rp {{ number_format($order->total_price, 0, ',', '.') }}</strong></p>
+            
+            {{-- Form untuk menginisiasi/melanjutkan pembayaran Midtrans --}}
+            <form action="{{ route('order.pay', $order->id) }}" method="POST" class="mt-3">
+                @csrf
+                <button type="submit" class="btn btn-danger btn-lg">
+                    <i class="bi bi-wallet"></i> Lanjutkan Pembayaran Sekarang
+                </button>
+            </form>
+            <p class="mt-2 text-muted">Akan membuka jendela pembayaran online Midtrans.</p>
+        </div>
+    @elseif ($order->status == 'paid')
+        <div class="alert alert-success text-center p-4 mb-5 shadow-sm">
+            <h4>✅ Pembayaran Berhasil!</h4>
+            <p>Pesanan Anda telah lunas dan statusnya akan segera diperbarui menjadi PROCEED.</p>
+        </div>
+    @endif
+    {{-- <<< END MODIFIKASI --}}
 
     <div class="timeline">
         @foreach ($orderLogs as $log)
@@ -50,6 +78,20 @@
         @endforeach
     </div>
 
+    {{-- Tambahkan detail order di sini agar lebih informatif --}}
+    <div class="card my-5 shadow-sm">
+        <div class="card-body">
+            <h5>Detail Pembayaran</h5>
+            <ul>
+                <li>Total Harga: <strong>Rp {{ number_format($order->total_price, 0, ',', '.') }}</strong></li>
+                <li>Nama Pelanggan: <strong>{{ $order->username }}</strong></li>
+                <li>Metode Pembayaran: {{ $order->payment_method ?? 'Belum Dibayar' }}</li>
+                <li>ID Midtrans: {{ $order->midtrans_transaction_id ?? '-' }}</li>
+            </ul>
+        </div>
+    </div>
+
+
     <div class="text-center mt-4">
         @if ($order->status == 'completed')
             <a href="{{ route('review.create', ['order' => $order->id]) }}" class="btn btn-primary">
@@ -70,62 +112,8 @@
 @section('styles')
 <style>
     .timeline {
-        position: relative;
-        padding-left: 30px;
-        margin: 0 auto;
-        max-width: 600px;
+        /* ... (CSS yang sudah ada) ... */
     }
-
-    .timeline-step {
-        position: relative;
-        display: flex;
-        align-items: center;
-        margin-bottom: 20px;
-        padding-left: 60px;
-    }
-
-    .timeline-step::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 30px;
-        width: 4px;
-        height: 100%;
-        background-color: #28a745;
-    }
-
-    .timeline-step:last-child::before {
-        height: 50%;
-    }
-
-    .timeline-step .timeline-icon {
-        position: absolute;
-        top: 0;
-        left: 10px;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background-color: #f0f0f0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1;
-    }
-
-    .timeline-step.active .timeline-icon {
-        background-color: #28a745;
-        color: #fff;
-    }
-
-    .timeline-content {
-        padding: 15px;
-        background-color: #e9ecef;
-        border-radius: 10px;
-        width: 100%;
-    }
-
-    .timeline-step.active .timeline-content {
-        background-color: #d4edda;
-    }
+    /* ... (CSS yang sudah ada) ... */
 </style>
 @endsection

@@ -5,17 +5,25 @@ namespace App\Models;
 use App\Models\OrderDetails;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\User; // Tambahkan use statement untuk Model User
 
 class Order extends Model
 {
     use HasFactory;
 
 
-    protected $fillable = ['total_price', 'username', 'order_code', 'status'];
+    protected $fillable = ['total_price', 'username', 'order_code', 'status', 'payment_method', 'midtrans_transaction_id', 'snap_token'];
+    
 
     public function OrderDetails()
     {
         return $this->hasMany(OrderDetails::class);
+    }
+    
+        public function user()
+    {
+        return $this->belongsTo(User::class, 'username', 'username'); // Asumsikan Anda memiliki kolom username di tabel users
+        
     }
 
     public function product()
@@ -31,5 +39,4 @@ class Order extends Model
     {
         return $this->hasMany(OrderLog::class);
     }
-
 }
